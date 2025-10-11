@@ -9,18 +9,28 @@
     <style>
         /* --- 全局与 Fluent UI 基础风格 --- */
         :root {
+            /* Light Mode Colors */
             --accent-color: #0078d4;
             --accent-color-light: #c7e0f4;
             --accent-color-dark: #005a9e;
             --text-color: #323130;
+            --text-color-secondary: #605e5c;
             --background-color-body: #f3f2f1;
             --background-color-main: #ffffff;
             --background-color-nav: #faf9f8;
             --background-color-hover: #e1dfdd;
             --border-color: #edebe9;
-            --shadow-color: rgba(0, 0, 0, 0.13);
+            --shadow-color-outer: rgba(0, 0, 0, 0.13);
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Roboto, Helvetica, Arial, sans-serif;
             --animation-duration: 0.3s;
+            
+            /* Liquid Glass Debug Variables */
+            --shadow-blur: 20px;
+            --shadow-spread: -5px;
+            --shadow-color: rgba(255, 255, 255, 0.7);
+            --tint-color-rgb: 250, 249, 248;
+            --tint-opacity: 0.8;
+            --frost-blur: 10px;
         }
 
         /* --- 初始加载动画 --- */
@@ -43,20 +53,77 @@
 
         /* --- 标题栏 --- */
         .title-bar {
-            height: 58px; /* 设定固定高度 */
-            padding: 0 24px; /* 调整内边距以垂直居中 */
+            height: 58px;
+            padding: 0 24px;
             display: flex;
             align-items: center;
-            background-color: rgba(250, 249, 248, 0.75); /* 增加透明度以获得更好的效果 */
-            backdrop-filter: blur(18px); /* 高斯模糊效果 */
-            -webkit-backdrop-filter: blur(18px); /* 兼容 Safari */
+            gap: 16px;
             font-size: 20px;
             font-weight: 600;
             color: var(--accent-color-dark);
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             flex-shrink: 0;
-            z-index: 10; /* 确保它在最上层 */
-            position: relative; /* z-index 生效需要 position 属性 */
+            z-index: 10;
+            position: relative;
+            isolation: isolate;
+            box-shadow: 0 0 15px rgba(0, 120, 212, 0.15);
+        }
+        
+        .title-bar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            background-color: rgba(var(--tint-color-rgb), var(--tint-opacity));
+            box-shadow: inset 0 0 var(--shadow-blur) var(--shadow-spread) var(--shadow-color);
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .title-bar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            backdrop-filter: blur(var(--frost-blur));
+            -webkit-backdrop-filter: blur(var(--frost-blur));
+            filter: url(#glass-distortion);
+            -webkit-filter: url(#glass-distortion);
+            transition: backdrop-filter 0.2s;
+        }
+
+        .title-text {
+            flex-grow: 1;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* --- 搜索框 --- */
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-box {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            background-color: rgba(128, 128, 128, 0.2);
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+            width: 180px;
+        }
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background-color: var(--background-color-main);
         }
 
         /* --- 主容器布局 --- */
@@ -64,23 +131,26 @@
             display: flex;
             flex-grow: 1;
             overflow: hidden;
-            margin-top: -58px; /* 向上拉，使其位于标题栏下方 */
+            margin-top: -58px;
         }
 
         /* --- 左侧导航菜单 --- */
         .side-nav {
             width: 280px;
             background-color: var(--background-color-nav);
-            padding: calc(16px + 58px) 8px 16px 8px; /* 调整顶部内边距以适应标题栏 */
+            padding: calc(16px + 58px) 8px 16px 8px;
             border-right: 1px solid var(--border-color);
             flex-shrink: 0;
             overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
         }
 
         .side-nav ul {
             list-style: none;
             padding: 0;
             margin: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .side-nav li a {
@@ -94,7 +164,6 @@
             font-weight: 500;
             position: relative;
             border-left: 3px solid transparent;
-            /* 动画效果 */
             transition: background-color 0.2s ease, color 0.2s ease, border-left-color 0.3s ease;
         }
 
@@ -112,14 +181,12 @@
         .content-area {
             flex-grow: 1;
             background-color: var(--background-color-main);
-            padding: calc(24px + 58px) 48px 24px 48px; /* 调整顶部内边距以适应标题栏 */
+            padding: calc(24px + 58px) 48px 24px 48px;
             overflow-y: auto;
             scroll-behavior: smooth;
-            /* 动画效果 */
             transition: opacity var(--animation-duration) ease-in-out, transform var(--animation-duration) ease-in-out;
         }
         
-        /* 内容切换时的淡出状态 */
         .content-area.fade-out {
             opacity: 0;
             transform: translateY(15px);
@@ -134,90 +201,230 @@
             margin-bottom: 1em;
             font-weight: 600;
         }
-
         .content-area h1 { font-size: 2.2em; }
         .content-area h2 { font-size: 1.8em; }
         .content-area h3 { font-size: 1.4em; }
-        
-        .content-area p {
-            line-height: 1.7;
-            font-size: 16px;
-            margin-bottom: 1em;
-        }
+        .content-area p { line-height: 1.7; font-size: 16px; margin-bottom: 1em; }
+        .content-area a { color: var(--accent-color); text-decoration: none; }
+        .content-area a:hover { text-decoration: underline; }
+        .content-area img { max-width: 100%; height: auto; border-radius: 4px; margin: 16px 0; box-shadow: 0 2px 8px var(--shadow-color-outer); border: 1px solid var(--border-color); }
+        .content-area code { font-family: Consolas, 'Courier New', monospace; background-color: var(--background-color-hover); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+        .content-area pre { background-color: var(--background-color-hover); padding: 16px; border-radius: 4px; overflow-x: auto; }
+        .content-area pre code { padding: 0; background-color: transparent; }
+        .content-area ul, .content-area ol { padding-left: 24px; }
+        .content-area li { line-height: 1.7; margin-bottom: 0.5em; }
+        .content-area blockquote { border-left: 4px solid var(--accent-color); padding-left: 16px; margin: 1em 0; color: var(--text-color-secondary); }
+        .content-area .selected { background-color: var(--accent-color-light); padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; color: var(--accent-color-dark); font-weight: bold; }
 
-        .content-area a {
-            color: var(--accent-color);
-            text-decoration: none;
+        /* --- 搜索结果样式 --- */
+        .search-result {
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
         }
-
-        .content-area a:hover {
-            text-decoration: underline;
+        .search-result-title {
+            font-weight: 600;
+            font-size: 1.2em;
+            color: var(--accent-color-dark);
+            margin-bottom: 8px;
         }
-
-        .content-area img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 4px;
-            margin: 16px 0;
-            box-shadow: 0 2px 8px var(--shadow-color);
-            border: 1px solid var(--border-color);
-        }
-
-        .content-area code {
-            font-family: Consolas, 'Courier New', monospace;
-            background-color: var(--background-color-hover);
-            padding: 2px 6px;
-            border-radius: 4px;
+        .search-result-snippet {
             font-size: 0.9em;
+            color: var(--text-color-secondary);
+            line-height: 1.6;
         }
-
-        .content-area pre {
-            background-color: var(--background-color-hover);
-            padding: 16px;
-            border-radius: 4px;
-            overflow-x: auto;
-        }
-        
-        .content-area pre code {
-            padding: 0;
-            background-color: transparent;
-        }
-
-        .content-area ul, .content-area ol {
-            padding-left: 24px;
-        }
-        
-        .content-area li {
-            line-height: 1.7;
-            margin-bottom: 0.5em;
-        }
-
-        .content-area blockquote {
-            border-left: 4px solid var(--accent-color);
-            padding-left: 16px;
-            margin: 1em 0;
-            color: #605e5c;
-        }
-        
-        /* 特殊样式，用于 AI.md 和 OBS.md 中的 <span class="selected"> */
-        .content-area .selected {
+        .search-result-snippet mark {
             background-color: var(--accent-color-light);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Consolas', monospace;
             color: var(--accent-color-dark);
             font-weight: bold;
+            padding: 2px;
+            border-radius: 3px;
+        }
+        .no-results {
+            text-align: center;
+            color: var(--text-color-secondary);
+            font-size: 1.2em;
+            padding-top: 40px;
         }
 
+        /* --- 响应式布局与移动端适配 --- */
+        .menu-toggle { display: none; background: none; border: none; padding: 0; cursor: pointer; flex-direction: column; justify-content: space-around; }
+        .menu-toggle span { display: block; width: 100%; height: 2px; background-color: var(--accent-color-dark); border-radius: 1px; transition: transform 0.3s, opacity 0.3s; }
+        .nav-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 99; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+        
+        .nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+        .nav-open .menu-toggle span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+        .nav-open .menu-toggle span:nth-child(2) { opacity: 0; }
+        .nav-open .menu-toggle span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+        
+        /* --- 调试菜单样式 --- */
+        #controls {
+            position: fixed;
+            top: 70px;
+            right: 10px;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-width: 280px;
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+            z-index: 200;
+            display: none; /* 默认隐藏 */
+            isolation: isolate;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px var(--shadow-color-outer), 0 0 10px rgba(0, 120, 212, 0.25);
+        }
+        #controls::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            border-radius: 8px;
+            background-color: rgba(var(--tint-color-rgb), var(--tint-opacity));
+            box-shadow: inset 0 0 var(--shadow-blur) var(--shadow-spread) var(--shadow-color);
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        #controls::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: 8px;
+            backdrop-filter: blur(var(--frost-blur));
+            -webkit-backdrop-filter: blur(var(--frost-blur));
+            filter: url(#glass-distortion);
+            -webkit-filter: url(#glass-distortion);
+            transition: backdrop-filter 0.2s;
+        }
+        #controls h2, #controls label {
+            transition: color 0.3s ease;
+        }
+        #controls h2 { margin: 8px 0; font-size: 16px; font-weight: 600; }
+        #controls label { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; font-weight: 500; }
+        #controls input[type=range] { 
+            width: 140px;
+            -webkit-appearance: none; appearance: none;
+            background: transparent; cursor: pointer;
+        }
+        #controls input[type=range]::-webkit-slider-runnable-track { background: rgba(128, 128, 128, 0.5); height: 4px; border-radius: 2px; }
+        #controls input[type=range]::-moz-range-track { background: rgba(128, 128, 128, 0.5); height: 4px; border-radius: 2px; }
+        #controls input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            margin-top: -6px;
+            background-color: var(--accent-color);
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 4px rgba(0,0,0,0.3);
+        }
+        #controls input[type=range]::-moz-range-thumb {
+            border: 2px solid white; border-radius: 50%;
+            background-color: var(--accent-color);
+            height: 16px; width: 16px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.3);
+        }
+        #controls input[type=color] { 
+            border: 1px solid rgba(128, 128, 128, 0.5); padding: 0;
+            width: 30px; height: 30px; border-radius: 4px;
+            background: none; cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .title-bar { padding: 0 16px; justify-content: center; }
+            .title-text { text-align: center; }
+            .header-controls { display: none; } /* 移动端隐藏搜索和主题切换 */
+            
+            /* 悬浮按钮 */
+            .menu-toggle {
+                display: flex;
+                position: fixed;
+                bottom: 24px;
+                left: 24px;
+                width: 56px; height: 56px;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                z-index: 101;
+                box-shadow: 0 4px 12px var(--shadow-color-outer), 0 0 10px rgba(0, 120, 212, 0.25);
+                padding: 15px; box-sizing: border-box;
+                gap: 5px;
+                align-items: center; justify-content: center;
+                isolation: isolate;
+            }
+
+            .menu-toggle::before {
+                content: '';
+                position: absolute; inset: 0; z-index: -2;
+                border-radius: 50%;
+                background-color: rgba(var(--tint-color-rgb), var(--tint-opacity));
+                box-shadow: inset 0 0 var(--shadow-blur) var(--shadow-spread) var(--shadow-color);
+            }
+
+            .menu-toggle::after {
+                content: '';
+                position: absolute; inset: 0; z-index: -1;
+                border-radius: 50%;
+                backdrop-filter: blur(var(--frost-blur));
+                -webkit-backdrop-filter: blur(var(--frost-blur));
+                filter: url(#glass-distortion);
+                -webkit-filter: url(#glass-distortion);
+            }
+            
+            .nav-open .menu-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+            .nav-open .menu-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+            /* 悬浮菜单 */
+            .side-nav {
+                position: fixed; left: 0; top: 0;
+                height: 100%;
+                transform: translateX(-100%);
+                z-index: 100;
+                padding-top: calc(16px + 58px);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1), 0 0 15px rgba(0, 120, 212, 0.1);
+                border-right: 1px solid rgba(255, 255, 255, 0.2);
+                isolation: isolate;
+                background-color: transparent;
+            }
+
+            .side-nav::before {
+                content: '';
+                position: absolute; inset: 0; z-index: -2;
+                background-color: rgba(var(--tint-color-rgb), var(--tint-opacity));
+                box-shadow: inset 0 0 var(--shadow-blur) var(--shadow-spread) var(--shadow-color);
+            }
+
+            .side-nav::after {
+                content: '';
+                position: absolute; inset: 0; z-index: -1;
+                backdrop-filter: blur(var(--frost-blur));
+                -webkit-backdrop-filter: blur(var(--frost-blur));
+                filter: url(#glass-distortion);
+                -webkit-filter: url(#glass-distortion);
+            }
+
+            .nav-open .side-nav { transform: translateX(0); }
+            
+            .content-area { padding: calc(24px + 58px) 24px 24px 24px; }
+            .content-area h1 { font-size: 1.8em; }
+            .content-area h2 { font-size: 1.5em; }
+        }
     </style>
 </head>
 <body>
-
+    <button class="menu-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    
     <header class="title-bar">
-        外院技术部2025软件使用指南
+        <span class="title-text">外院技术部2025软件使用指南</span>
+        <div class="header-controls">
+            <input type="search" id="search-box" class="search-box" placeholder="搜索...">
+        </div>
     </header>
 
     <div class="main-container">
+        <div class="nav-backdrop"></div>
         <nav class="side-nav">
             <ul>
                 <li><a href="#" class="nav-link active" data-md-id="home-md">主页</a></li>
@@ -231,111 +438,82 @@
             <!-- Markdown内容将在这里呈现 -->
         </main>
     </div>
+    
+    <div id="controls">
+        <h2>Inner Shadow</h2>
+        <label>Color: <input type="color" id="shadow-color-input" value="#ffffff"></label>
+        <label>Blur: <input type="range" id="shadow-blur-input" min="0" max="50" value="20">px</label>
+        <label>Spread: <input type="range" id="shadow-spread-input" min="-25" max="25" value="-5">px</label>
+        <h2>Glass Tint</h2>
+        <label>Tint Color: <input type="color" id="tint-color-input" value="#faf9f8"></label>
+        <label>Opacity: <input type="range" id="tint-opacity-input" min="0" max="100" value="80">%</label>
+        <h2>Frost Blur</h2>
+        <label>Blur Radius: <input type="range" id="frost-blur-input" min="0" max="50" value="10">px</label>
+        <h2>Noise Distortion</h2>
+        <label>Noise Freq: <input type="range" id="noise-frequency" min="0" max="0.1" step="0.001" value="0.015"></label>
+        <label>Strength: <input type="range" id="distortion-strength" min="0" max="100" value="10"></label>
+    </div>
 
-    <!-- 存储Markdown内容的隐藏区域 -->
     <div id="markdown-storage" style="display: none;">
         <script type="text/markdown" id="home-md">
 # 软件基础操作指南
-
 #### 人文与外语学院综合技术部
-
-
-
 本教程旨在帮助同学们学习工作要用到的软件的基础操作~以方便工作快速上手。
-
 可点击左侧菜单的选项进入对应的指南哦
-
-
-
 by 谭文旭
-
 © 2025 btm\_m All rights reserved.
         </script>
-        
         <script type="text/markdown" id="ai-md">
 # Adobe Illustrator 2024/2025 指南
-
 **作者：** 谭文旭
-
 ## 前言
-
 **为了提升同学们的综合技术能力，我们今年将进行 Adobe Illustrator 的学习。于是便有了这篇基础指南。**
-
 ## Adobe Illustrator 简介
-
 **Adobe Illustrator（简称 AI）是一款由 Adobe 公司开发的专业矢量图形编辑软件。作为行业标准，它被广泛应用于图形设计、插画创作和数字艺术领域。**
-
 **与 Photoshop 基于像素处理图像不同，Illustrator 的核心是**​**矢量图形**​**。矢量图由数学路径、点和曲线构成，这意味着无论将其放大到多大尺寸（从名片到巨型广告牌），图形的边缘始终保持清晰锐利，不会出现模糊或失真的情况。**
-
 **主要用途包括：**
-
 * **标志（Logo）设计：** 创建可无限缩放的品牌标识。
 * **图标（Icon）与UI元素：** 为网站和移动应用设计精确的界面元素。
 * **插画与海报：** 绘制复杂的艺术作品和商业宣传品。
 * **版式设计：** 结合文字与图形，进行书籍、传单等排版工作。
 * **数据可视化：** 制作信息图表和统计图。
-
 **对于设计师和艺术家来说，Illustrator 是一个强大且不可或缺的创意工具。**
-
 ## 基础界面
-
 ### 初始界面
-
 ![AI](https://zhinan.0m-p.space/AI-1.png)
-
 #### 左侧
-
 * **新文件：** 可以创建新的 Adobe Illustrator 工程文件。
 * **打开：** 可以打开之前的 Adobe Illustrator 工程文件。
-
 #### 右侧
-
 * **快速创建新文件：** 可选择预设分辨率、比例等快速创建新工程。
-
 ### 新建文档界面
-
 ![AI](https://zhinan.0m-p.space/AI-2.png)
-
 #### 左侧
-
 * **预设：** 可选择预设或最近使用的文档尺寸。
-
 #### 右侧
-
 * **标题：** 设置文档的文件名。
 * **宽度 & 高度：** 设置文档的分辨率（一般推文封面分辨率为 `<span class="selected">1800 x 766</span>`，单位为像素）。
 * **创建按钮：** 点击以创建新文档。
-
 ### AI 主界面
-
 ![AI](https://zhinan.0m-p.space/AI-3.png)
-
 1. **菜单栏 (Menu Bar)** 位于界面的最顶端，包含了软件的所有功能命令。例如文件操作（新建、打开、存储）、编辑（剪切、复制、粘贴）、对象变换、文字处理、效果应用、视图控制等。
 2. **工具栏 (Toolbar)** 通常位于界面的左侧，集合了用于创建和编辑图形的各种工具。包括选择工具、绘图工具（如钢笔、画笔、形状工具）、文字工具、变换工具（如旋转、缩放）以及导航工具（如抓手、缩放）等。
 3. **图片编辑区 / 画板 (Artboard)** 这是界面的中心区域，也是您的主要工作区。您所有的设计、绘图和内容编排都在这个白色的画板上进行。一个文档可以包含一个或多个画板。
 4. **属性面板 (Properties Panel)** 通常位于界面的右侧。这是一个非常核心的区域，它会根据您当前所选的工具或对象，动态地显示相关的属性和选项，方便您快速进行调整。例如，当您选中一个形状时，这里会显示它的位置、尺寸、填充和描边颜色、不透明度等信息。
 5. **图层面板 (Layers Panel)** 这个面板用于组织和管理文档中的所有对象。通过图层，您可以对复杂的图形进行分层管理，方便地进行选择、编辑、锁定或隐藏特定内容，使工作流程更加清晰有序。
 6. **颜色面板 (Color Panel)** 用于选择和定义颜色。您可以在这里通过调整 RGB（红绿蓝）或 CMYK（青品黄黑）等色彩模式的滑块来精确创建颜色，并将其应用于对象的填充或描边。
-
 ### 导出界面
-
 ![AI](https://zhinan.0m-p.space/AI-4.png)
-
 **路径：** 菜单栏 -> 文件 -> 导出 -> 导出为多种屏幕所用格式
-
 #### 左侧选择区
-
 * **画板 (Artboards) 标签页:**
   * **显示当前文档中所有的画板缩略图。**
   * **您可以通过勾选每个画板左上角的复选框来选择一个或多个需要导出的画板。**
 * **资源 (Assets) 标签页:**
   * **如果您使用了“资源导出”面板将特定的图稿添加为资源，它们会在这里显示。**
   * **与画板类似，您可以勾选并选择要导出的单个资源。**
-
 #### 右侧设置区
-
 **这是配置导出文件所有参数的区域。**
-
 * **选择 (Selection)**
   * **全部 (All):** 导出现在被选中的所有画板或资源。
   * **范围 (Range):** 允许您通过输入画板编号来指定一个导出范围（例如 `<span class="selected">1-3</span>` 或 `<span class="selected">1, 4</span>`）。
@@ -356,90 +534,53 @@ by 谭文旭
     * **后缀 (Suffix):** 在导出的文件名后添加的文本。例如，`<span class="selected">@2x</span>` 后缀常用于 Retina 屏幕的资源。
     * **格式 (Format):** 选择导出的文件类型，如 `<span class="selected">PNG</span>`, `<span class="selected">SVG</span>`, `<span class="selected">JPG</span>`, `<span class="selected">PDF</span>` 等。
   * **+ 添加缩放 (+ Add Scale):** 点击此按钮可以手动添加一行新的导出规则。
-
 #### 底部操作区
-
 * **清除选区 (Clear Selection):** 取消在左侧区域勾选的所有画板或资源。
 * **前缀 (Prefix):** 在这里可以输入一个文本，该文本会自动添加到所有导出文件名的最前面。
 * **导出画板 (Export Artboard):** 核心操作按钮。完成所有设置后，点击此按钮开始执行导出。
-
 ---
-
-
-
 ## The End
-
 ### Thanks for Reading
-
 © 2025 btm_m All rights reserved.
         </script>
-
         <script type="text/markdown" id="ps-md">
 # 完善中
         </script>
-        
         <script type="text/markdown" id="canva-md">
 # 完善中
         </script>
-        
         <script type="text/markdown" id="obs-md">
 # OBS Studio 基础指南
-
 **作者：** 谭文旭
-
 ## 前言
-
 **大屏中控是综合技术部每年的重要工作之一。为了培养同学们的相关工作能力，特写一篇基础指南。**
-
 ## OBS Studio 简介
-
 ## Windows 有线投屏规则介绍
-
 #### 控制面板位置
-
 ![AI](https://zhinan.0m-p.space/OBS-1.png)
-
 任务栏右边的控制中心（网络、音量、电池三个图标）
-
 #### 各个投屏方式的功能
-
 **仅电脑屏幕：** 内容只显示在您的主电脑屏幕上。
 **复制：** 在所有连接的屏幕上显示相同の内容，适用于演示。
 **扩展：** 将您的桌面延伸到所有连接的屏幕上，创建一个更大的工作区。
 **仅第二屏幕：** 内容只显示在连接的第二个屏幕上，主屏幕将关闭。
-
-
 ![AI](https://zhinan.0m-p.space/OBS-2.png)
-
-
 ## 基础界面
-
 ### 初始界面
-
-
-
 # OBS Studio 界面功能区介绍
-
 **OBS (Open Broadcaster Software) Studio 是一款免费且开源的视频录制和直播软件。其主界面主要由以下几个核心功能区组成，下图是各区域的详细说明。**
-
 ![AI](https://zhinan.0m-p.space/OBS-A.png)
-
 ### 1. 预览窗口
-
 * **位置：** 界面最上方、最中心的大窗口。
 * **功能：** 这是您的“画布”，实时显示当前场景中所有来源组合后的最终画面。您可以在这个窗口中直接通过拖拽来调整各个来源（如摄像头、图片、游戏窗口）的大小和位置，就像在编辑一张图片一样。红色边框代表当前选中的来源，您可以对其进行变换操作。
-
 ### 2. 场景
-
 * **位置：** 默认在左下角。
 * **功能：** “场景”可以理解为不同画面布局的预设。例如，您可以创建一个“游戏场景”（包含游戏画面和摄像头）、一个“聊天场景”（摄像头全屏）和一个“稍等场景”（显示一张静态图片）。直播或录制时，您只需单击一下即可在这些预设好的场景之间快速切换，实现丰富的视觉效果。
 * **操作：**
   * `<span class="selected">+</span>`：添加新场景。
   * `<span class="selected">-</span>`：删除选中场景。
   * `<span class="selected">▲/▼</span>`：调整场景顺序。
-
 ### 3. 来源
-
 * **位置：** “场景”面板的右侧。
 * **功能：** “来源”是构成一个场景的具体元素。每个场景都由一个或多个来源组成。常见的来源类型包括：
   * **图像/图片：** 添加静态图片。
@@ -454,9 +595,7 @@ by 谭文旭
   * `<span class="selected">⚙️</span>`：打开选中来源的属性设置。
   * `<span class="selected">👁️</span>`：点击眼睛图标可以显示或隐藏某个来源。
   * `<span class="selected">🔒</span>`：点击锁形图标可以锁定来源，防止在预览窗口中误操作。
-
 ### 4. 混音器
-
 * **位置：** 界面底部中心区域。
 * **功能：** 这里管理您所有的音频输入和输出。每个音频来源（如麦克风、桌面音频、媒体源的声音）都会在这里显示为一个独立的轨道。
 * **主要控件：**
@@ -464,17 +603,13 @@ by 谭文旭
   * **音量滑块：** 左右拖动可以调整对应音源的音量大小。
   * **喇叭图标：** 点击可以静音或取消静音。
   * `<span class="selected">⚙️</span>`：点击齿轮图标可以进入高级音频属性，进行更复杂的设置（如声道、监听等）。
-
 ### 5. 场景过渡
-
 * **位置：** “混音器”面板的右侧。
 * **功能：** 设置当您从一个场景切换到另一个场景时的过渡动画效果。
 * **选项：**
   * **下拉菜单：** 可以选择不同的过渡效果，如“淡入淡出”（默认）、“切”、“滑”等。
   * **时长：** 设置过渡动画完成所需的时间（以毫秒为单位）。
-
 ### 6. 控制
-
 * **位置：** 界面右下角。
 * **功能：** 这是 OBS 的主控制面板，包含了开始和停止核心功能的操作按钮。
 * **主要按钮：**
@@ -484,9 +619,7 @@ by 谭文旭
   * **工作室模式：** 启用双预览窗口模式，一个用于编辑即将切换的场景，另一个显示当前直播的画面，适合更专业的直播操作。
   * **设置：** 打开 OBS 的全局设置窗口，您可以在此配置视频、音频、推流、热键等所有高级选项。
   * **退出：** 关闭 OBS Studio 软件。
-
 ### 7. 状态栏
-
 * **位置：** 界面最底部。
 * **功能：** 显示 OBS 的实时运行状态信息，帮助您监控性能。
 * **主要信息：**
@@ -494,46 +627,47 @@ by 谭文旭
   * **CPU 使用率：** 显示 OBS 占用的 CPU 资源百分比，过高可能导致卡顿。
   * **FPS (Frames Per Second)：** 显示当前的帧率，稳定的帧率是流畅画面的保证。
   * **码率/丢帧信息：** 直播时会显示当前的上传速度和丢帧情况，是判断网络健康度的重要指标。
-
 ### 媒体源基础设置界面
-
 ##### 如何进入？
-
 选中媒体源--点击设置
 ![AI](https://zhinan.0m-p.space/OBS-4.png)
-
 如下图所示，**取消勾选“当源变为活动状态时重新启动播放”以及“循环”** 这两个选项。
 ![AI](https://zhinan.0m-p.space/OBS-5.png)
-
 * **效果：** 完成此设置后，当您从其他场景切换回来时，您的背景音乐或视频将从上次离开时的位置继续播放，而不是从头开始。这对于需要持续背景音乐或循环视频的直播和录制非常重要。
-
-
 ##### 如何输出声音？
-
 1. 点击混音器部分左下角的**齿轮**图标
 2. 选中需要输出音频的媒体源，切换为**监听并输出**
-
 ![AI](https://zhinan.0m-p.space/OBS-6.png)
 ![AI](https://zhinan.0m-p.space/OBS-7.png)
-
 ---
-
 ## The End
-
 ### Thanks for Reading
-
 © 2025 btm_m All rights reserved.
         </script>
     </div>
 
+    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute; overflow:hidden; z-index: -100;">
+        <defs>
+            <filter id="glass-distortion">
+                <feTurbulence id="noise-turbulence" type="fractalNoise" baseFrequency="0.015" numOctaves="2" result="turbulence" >
+                    <animate attributeName="baseFrequency" dur="10s" from="0.01 0.02" to="0.02 0.03" repeatCount="indefinite" />
+                </feTurbulence>
+                <feDisplacementMap id="noise-displacement" in2="turbulence" in="SourceGraphic" scale="10" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+        </defs>
+    </svg>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // --- 常规UI逻辑 ---
             const contentArea = document.getElementById('content');
             const navLinks = document.querySelectorAll('.nav-link');
-            const animationDuration = 300; // ms, a bit less than CSS var to be safe
+            const menuToggle = document.querySelector('.menu-toggle');
+            const navBackdrop = document.querySelector('.nav-backdrop');
+            const body = document.body;
+            const animationDuration = 300; // ms
             let isAnimating = false;
 
-            // 初始化 Markdown 转换器
             const converter = new showdown.Converter({
                 ghCompatibleHeaderId: true,
                 simpleLineBreaks: true,
@@ -541,54 +675,135 @@ by 谭文旭
                 strikethrough: true
             });
 
-            // 加载并显示 Markdown 内容的函数
             function loadMarkdown(mdId) {
-                const markdownText = document.getElementById(mdId)?.textContent || '## 内容加载失败\n\n请检查对应的 Markdown 文件是否存在。';
-                
-                // 1. 开始淡出动画
+                const markdownText = document.getElementById(mdId)?.textContent || '## 内容加载失败';
                 contentArea.classList.add('fade-out');
-                
-                // 2. 等待淡出动画完成
                 setTimeout(() => {
-                    // 3. 切换内容
-                    const htmlContent = converter.makeHtml(markdownText);
-                    contentArea.innerHTML = htmlContent;
-                    contentArea.scrollTop = 0; // 切换后滚动到顶部
-                    
-                    // 4. 开始淡入动画
+                    contentArea.innerHTML = converter.makeHtml(markdownText);
+                    contentArea.scrollTop = 0;
                     contentArea.classList.remove('fade-out');
-
-                    // 5. 解锁点击
                     setTimeout(() => isAnimating = false, 50);
-
                 }, animationDuration);
             }
 
-            // 为导航链接添加点击事件
             navLinks.forEach(link => {
                 link.addEventListener('click', function (event) {
                     event.preventDefault();
-                    // 如果正在播放动画或点击的是当前已激活的链接，则不执行任何操作
-                    if (isAnimating || this.classList.contains('active')) {
-                        return;
-                    }
-                    isAnimating = true; // 锁定点击
-
-                    // 移除所有链接的 active 状态
+                    if (isAnimating || this.classList.contains('active')) return;
+                    isAnimating = true;
+                    body.classList.remove('nav-open');
                     navLinks.forEach(nav => nav.classList.remove('active'));
-                    // 为当前点击的链接添加 active 状态
                     this.classList.add('active');
-
                     const mdId = this.getAttribute('data-md-id');
                     loadMarkdown(mdId);
                 });
             });
 
-            // 初始加载主页内容
+            menuToggle.addEventListener('click', () => { body.classList.toggle('nav-open'); });
+            navBackdrop.addEventListener('click', () => { body.classList.remove('nav-open'); });
             loadMarkdown('home-md');
+
+            // --- 调试菜单逻辑 ---
+            const searchInput = document.getElementById('search-box');
+            const controlsPanel = document.getElementById('controls');
+            const titleText = document.querySelector('.title-text');
+            let titleClickCount = 0;
+            let titleClickTimer = null;
+
+            function toggleControls() {
+                const isVisible = controlsPanel.style.display === 'block';
+                controlsPanel.style.display = isVisible ? 'none' : 'block';
+            }
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && searchInput.value.toLowerCase() === 'debug') {
+                    toggleControls();
+                    e.preventDefault();
+                }
+            });
+            
+            titleText.addEventListener('click', () => {
+                titleClickCount++;
+                if (titleClickTimer) clearTimeout(titleClickTimer);
+
+                if (titleClickCount >= 5) {
+                    toggleControls();
+                    titleClickCount = 0;
+                } else {
+                    titleClickTimer = setTimeout(() => {
+                        titleClickCount = 0;
+                    }, 800);
+                }
+            });
+            
+            const root = document.documentElement;
+            function setVar(name, val) { root.style.setProperty(name, val); }
+
+            const feTurbulence = document.getElementById('noise-turbulence');
+            const feDisplacementMap = document.getElementById('noise-displacement');
+
+            function updateSVG() {
+                const freq = parseFloat(document.getElementById('noise-frequency').value);
+                const scale = document.getElementById('distortion-strength').value;
+                // Update the animation as well if it exists
+                const animateEl = feTurbulence.querySelector('animate');
+                if (animateEl) {
+                    animateEl.setAttribute('from', `${freq} ${freq + 0.01}`);
+                    animateEl.setAttribute('to', `${freq + 0.01} ${freq + 0.02}`);
+                } else {
+                     feTurbulence.setAttribute('baseFrequency', `${freq}`);
+                }
+                feDisplacementMap.setAttribute('scale', scale);
+            }
+
+            function getContrastingTextColor(rgbString, opacity) {
+                const tintRgb = rgbString.split(',').map(Number);
+                // Simulate blending over a mid-grey background to guess the final visible color
+                const bgRgb = [128, 128, 128];
+                
+                const finalR = tintRgb[0] * opacity + bgRgb[0] * (1 - opacity);
+                const finalG = tintRgb[1] * opacity + bgRgb[1] * (1 - opacity);
+                const finalB = tintRgb[2] * opacity + bgRgb[2] * (1 - opacity);
+
+                const luminance = 0.299 * finalR + 0.587 * finalG + 0.114 * finalB;
+                return luminance > 128 ? { text: '#323130', accent: '#005a9e' } : { text: '#ffffff', accent: '#95d3ff' };
+            }
+
+            function updateControlsTextColor() {
+                const tintColorRgb = getComputedStyle(root).getPropertyValue('--tint-color-rgb').trim();
+                const tintOpacity = parseFloat(getComputedStyle(root).getPropertyValue('--tint-opacity'));
+                const colors = getContrastingTextColor(tintColorRgb, tintOpacity);
+
+                controlsPanel.querySelectorAll('label').forEach(label => label.style.color = colors.text);
+                controlsPanel.querySelectorAll('h2').forEach(h2 => h2.style.color = colors.accent);
+            }
+
+            const controls = {
+                'shadow-color-input': ['--shadow-color', v => v],
+                'shadow-blur-input': ['--shadow-blur', v => v + 'px'],
+                'shadow-spread-input': ['--shadow-spread', v => v + 'px'],
+                'tint-color-input': ['--tint-color-rgb', v => v.match(/\w\w/g).map(h => parseInt(h, 16)).join(',')],
+                'tint-opacity-input': ['--tint-opacity', v => v / 100],
+                'frost-blur-input': ['--frost-blur', v => v + 'px'],
+            };
+
+            function updateAll() {
+                Object.entries(controls).forEach(([id, [cssVar, fn]]) => {
+                    const el = document.getElementById(id);
+                    if (el) setVar(cssVar, fn(el.value));
+                });
+                updateSVG();
+                updateControlsTextColor();
+            }
+
+            document.querySelectorAll('#controls input').forEach(i =>
+                i.addEventListener('input', updateAll)
+            );
+            
+            // 初始化
+            updateAll();
         });
     </script>
-
 </body>
 </html>
 
